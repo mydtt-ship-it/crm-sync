@@ -1,0 +1,31 @@
+name: daily-crm-sync
+on:
+  schedule:
+    # 18:30 UTC = 01:30 VN -> lấy dữ liệu hôm qua
+    - cron: "30 18 * * *"
+  workflow_dispatch:
+    inputs:
+      data_date:
+        description: "dd/mm/yyyy, để trống = hôm qua"
+        required: false
+        default: ""
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: |
+          echo '${{ secrets.GOOGLE_SA_JSON }}' > sa.json
+          python main.py
+        env:
+          CRM_USERNAME: ${{ secrets.CRM_USERNAME }}
+          CRM_PASSWORD: ${{ secrets.CRM_PASSWORD }}
+          CRM_BASE_URL: https://app.seoulspa.vn
+          GOOGLE_SA_JSON: sa.json
+          TARGET_FILE_ID: ${{ secrets.TARGET_FILE_ID }}
+          DATA_DATE: ${{ inputs.data_date }}
